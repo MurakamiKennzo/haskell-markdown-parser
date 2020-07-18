@@ -1,0 +1,68 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.33.0.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: 88fb296187a287327d569bd7b5f715ad2446fb8d8dffb8607a47bf8693be13bd
+
+name:           haskell-markdown-parser
+version:        0.1.0.0
+description:    Please see the README on GitHub at <https://github.com/MurakamiKennzo/haskell-markdown-parser#readme>
+homepage:       https://github.com/MurakamiKennzo/haskell-markdown-parser#readme
+bug-reports:    https://github.com/MurakamiKennzo/haskell-markdown-parser/issues
+author:         murakami
+maintainer:     w18191263056@yaoo.co.jp
+copyright:      2020 murakami
+license:        MIT
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    README.md
+    ChangeLog.md
+
+source-repository head
+  type: git
+  location: https://github.com/MurakamiKennzo/haskell-markdown-parser
+
+library
+  exposed-modules:
+      Html
+      Lib
+      Markdown
+      Parser
+  other-modules:
+      Paths_haskell_markdown_parser
+  hs-source-dirs:
+      src
+  build-depends:
+      base >=4.7 && <5
+    , parsec
+  default-language: Haskell2010
+
+executable haskell-markdown-parser-exe
+  main-is: Main.hs
+  other-modules:
+      Paths_haskell_markdown_parser
+  hs-source-dirs:
+      app
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      base >=4.7 && <5
+    , haskell-markdown-parser
+    , parsec
+  default-language: Haskell2010
+
+test-suite haskell-markdown-parser-test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      Paths_haskell_markdown_parser
+  hs-source-dirs:
+      test
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      base >=4.7 && <5
+    , haskell-markdown-parser
+    , parsec
+  default-language: Haskell2010
