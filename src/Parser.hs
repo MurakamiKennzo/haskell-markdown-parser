@@ -3,6 +3,8 @@ module Parser
     parserMarkdown
   , parseImage
   , parseLink
+  , parseInlines
+  , parseInline
   ) where
 
 import Text.Parsec
@@ -19,7 +21,7 @@ parseBlock = choice [ try parseHeading
                     , try parseList
                     , try parseDivider
                     , try parseCode
-                    , parseParagraph ]
+                    , try parseParagraph ]
 
 parseHeading :: Parser Block
 parseHeading = do
@@ -111,12 +113,15 @@ parseParagraph = do
   return $ Paragraph inlines
 
 parseInlines :: Parser [Inline]
-parseInlines = many $ choice [ try parseLink
-                             , try parseImage
-                             , try parseItalic
-                             , try parseStrong
-                             , try parseItalicStrong
-                             , parseString ]
+parseInlines = manyTill parseInline newline'
+
+parseInline :: Parser Inline
+parseInline = choice [ try parseLink
+                     , try parseImage
+                     , try parseItalicStrong
+                     , try parseStrong
+                     , try parseItalic
+                     , try parseString ]
 
 parseLink :: Parser Inline
 parseLink = do
@@ -154,6 +159,14 @@ parseItalicStrong = do
   return $ ItalicStrong str
 
 parseString :: Parser Inline
-parseString = many anyChar >>= return . Text
+parseString = do
+  str <- manyTill anyChar (lookAhead $ newline' <|> (nextInlineOrEnd >> return ()))
+  return $ Text str
+  where nextInlineOrEnd :: Parser Inline
+        nextInlineOrEnd = choice [ try parseLink
+                                 , try parseImage
+                                 , try parseItalicStrong
+                                 , try parseStrong
+                                 , try parseItalic ]
 
 newline' = eof <|> (newline >> return ())
