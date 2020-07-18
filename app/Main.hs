@@ -6,4 +6,4 @@ import Text.Parsec
 
 main :: IO ()
 main = do
-  print $ parse (parseInlines) "Unknown" "[i13](https://muimage)rt***fgg***455*6***77**"
+  print $ parse parserMarkdown "Unknown" "# hello world\nyou know me\n1. hello world\n2. world \n3. 33"

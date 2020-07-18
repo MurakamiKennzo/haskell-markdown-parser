@@ -5,6 +5,12 @@ module Parser
   , parseLink
   , parseInlines
   , parseInline
+  , parseParagraph
+  , parseDivider
+  , parseCode
+  , parseQuote
+  , parseHeading
+  , parseList
   ) where
 
 import Text.Parsec
@@ -13,7 +19,7 @@ import Markdown
 import Control.Monad ( guard )
 
 parserMarkdown :: Parser Markdown
-parserMarkdown = many parseBlock
+parserMarkdown = manyTill parseBlock eof
 
 parseBlock :: Parser Block
 parseBlock = choice [ try parseHeading
@@ -91,7 +97,7 @@ parseList = try parseOrderedList <|> try parseUnorderedList
 
 parseDivider :: Parser Block
 parseDivider = do
-  chars <- many1 $ char '-'
+  chars <- many $ char '-'
   guard (length chars >= 3)
   newline'
   return $ Divider
@@ -100,9 +106,7 @@ parseCode :: Parser Block
 parseCode = do
   string "```"
   newline'
-  code <- many anyChar
-  newline'
-  string "```"
+  code <- manyTill anyChar (string "```")
   newline'
   return $ Code code
 
@@ -113,7 +117,7 @@ parseParagraph = do
   return $ Paragraph inlines
 
 parseInlines :: Parser [Inline]
-parseInlines = manyTill parseInline newline'
+parseInlines = manyTill parseInline (lookAhead newline')
 
 parseInline :: Parser Inline
 parseInline = choice [ try parseLink
