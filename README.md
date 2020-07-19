@@ -7,6 +7,7 @@
 
 Here is a simple demo.
 
+![simple demo](https://github.com/MurakamiKennzo/haskell-markdown-parser/blob/master/screenshots/demo.gif)
 
 
 Note: need improvement.
