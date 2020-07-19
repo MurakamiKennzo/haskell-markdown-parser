@@ -9,5 +9,9 @@ Here is a simple demo.
 
 ![simple demo](https://github.com/MurakamiKennzo/haskell-markdown-parser/blob/master/screenshots/demo.gif)
 
-
+```shell
+$ stack setuo
+$ stack build
+$ stack exec haskell-markdown-parser-exe input-markdown-filepath output-html-filepath
+```
 Note: need improvement.
