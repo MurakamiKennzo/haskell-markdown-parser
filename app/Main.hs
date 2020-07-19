@@ -2,8 +2,17 @@ module Main where
 
 import Lib
 import Parser
-import Text.Parsec
+import Text.Parsec.String
+import Html
+import System.Environment
 
 main :: IO ()
 main = do
-  print $ parse parserMarkdown "Unknown" "# hello world\nyou know me\n1. hello world\n2. world \n3. 33"
+  (filename:outputFilename:_) <- getArgs
+  result <- parseFromFile parserMarkdown filename 
+  case result of
+    Left err -> print err
+    Right markdown -> let html = genHtml markdown
+                      in  do
+                        writeFile outputFilename html
+                        putStrLn "Done!"

@@ -80,7 +80,7 @@ parseList = try parseOrderedList <|> try parseUnorderedList
           item <- parseInlines
           newline'
           items <- parseUnorderedList'
-          return $ List UnoerderedList (item:items)
+          return $ List UnorderedList (item:items)
         
         parseUnorderedList' :: Parser [[Inline]]
         parseUnorderedList' = choice [ try newline' >> return []

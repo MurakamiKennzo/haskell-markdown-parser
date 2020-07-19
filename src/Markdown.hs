@@ -23,7 +23,7 @@ data Inline = Link LinkName LinkAddress
             | Strong String
             | ItalicStrong String deriving (Eq, Show)
 
-data ListType = OrderedList | UnoerderedList deriving (Eq, Show)
+data ListType = OrderedList | UnorderedList deriving (Eq, Show)
 
 type Markdown = [Block]
 
