@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 62ab539f7a152faded3f680fa95196c862c885219c196f39605078d8bd0002c4
+-- hash: 8a3ae5ad4a41d79ff20358373ae8d5299b945cfca0d69c68780e5f73b190434f
 
 name:           haskell-markdown-parser
 version:        0.1.0.0
@@ -28,7 +28,6 @@ source-repository head
 library
   exposed-modules:
       Html
-      Lib
       Markdown
       Parser
   other-modules:
@@ -37,9 +36,7 @@ library
       src
   build-depends:
       base >=4.7 && <5
-    , html-entities
     , parsec
-    , text
   default-language: Haskell2010
 
 executable haskell-markdown-parser-exe
@@ -52,9 +49,7 @@ executable haskell-markdown-parser-exe
   build-depends:
       base >=4.7 && <5
     , haskell-markdown-parser
-    , html-entities
     , parsec
-    , text
   default-language: Haskell2010
 
 test-suite haskell-markdown-parser-test
@@ -68,7 +63,5 @@ test-suite haskell-markdown-parser-test
   build-depends:
       base >=4.7 && <5
     , haskell-markdown-parser
-    , html-entities
     , parsec
-    , text
   default-language: Haskell2010

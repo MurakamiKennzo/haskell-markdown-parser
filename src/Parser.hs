@@ -1,16 +1,6 @@
 module Parser
   (
     parserMarkdown
-  , parseImage
-  , parseLink
-  , parseInlines
-  , parseInline
-  , parseParagraph
-  , parseDivider
-  , parseCode
-  , parseQuote
-  , parseHeading
-  , parseList
   ) where
 
 import Text.Parsec
@@ -19,7 +9,7 @@ import Markdown
 import Control.Monad ( guard )
 
 parserMarkdown :: Parser Markdown
-parserMarkdown = manyTill parseBlock eof
+parserMarkdown = many parseBlock <* eof
 
 parseBlock :: Parser Block
 parseBlock = choice [ try parseHeading
@@ -27,150 +17,103 @@ parseBlock = choice [ try parseHeading
                     , try parseList
                     , try parseDivider
                     , try parseCode
-                    , try parseParagraph ]
+                    , parseParagraph ]
 
 parseHeading :: Parser Block
 parseHeading = do
   chars <- many1 $ char '#'
   let charL = length chars
   guard (charL <= 6)
-  char ' '
+  spaces''
   inlines <- parseInlines
-  newline'
   return $ Headering (toEnum $ pred charL) inlines
 
 parseQuote :: Parser Block
-parseQuote = do
-  char '>'
-  char ' '
-  inlines <- parseInlines
-  newline'
-  return $ Quote inlines
+parseQuote = (char '>' <* spaces'') >> (parseInlines >>= return . Quote)
 
 parseList :: Parser Block
-parseList = try parseOrderedList <|> try parseUnorderedList
+parseList = parseOrderedList <|> parseUnorderedList
   where parseOrderedList :: Parser Block
-        parseOrderedList = do
-          many1 $ digit
-          char '.'
-          char ' '
-          item <- parseInlines
-          newline'
-          items <- parseOrderedList'
-          return $ List OrderedList (item:items)
-        
-        parseOrderedList' :: Parser [[Inline]]
-        parseOrderedList' = choice [ try newline' >> return []
-                                   , parseOrderedList'' ]
+        parseOrderedList = many1 orderedListItem >>= return . List OrderedList
 
-        parseOrderedList'' :: Parser [[Inline]]
-        parseOrderedList'' = do
-          many1 $ digit
-          char '.'
-          char ' '
-          item <- parseInlines
-          newline'
-          items <- parseOrderedList'
-          return $ item : items
-          
+        orderedListItem :: Parser [Inline]
+        orderedListItem = ((many1 digit >> char '.') <* spaces'') >> parseInlines
+
         parseUnorderedList :: Parser Block
-        parseUnorderedList = do
-          digit <- char '-'
-          char ' '
-          item <- parseInlines
-          newline'
-          items <- parseUnorderedList'
-          return $ List UnorderedList (item:items)
-        
-        parseUnorderedList' :: Parser [[Inline]]
-        parseUnorderedList' = choice [ try newline' >> return []
-                                     , parseUnorderedList'' ]
+        parseUnorderedList = many1 unorderedListItem >>= return . List UnorderedList
 
-        parseUnorderedList'' :: Parser [[Inline]]
-        parseUnorderedList'' = do
-          digit <- char '-'
-          char ' '
-          item <- parseInlines
-          newline'
-          items <- parseUnorderedList'
-          return $ item : items
+        unorderedListItem :: Parser [Inline]
+        unorderedListItem = ((oneOf "-*+") <* spaces'') >> parseInlines
 
 parseDivider :: Parser Block
-parseDivider = do
-  chars <- many $ char '-'
-  guard (length chars >= 3)
-  newline'
-  return $ Divider
+parseDivider = (hyphen <|> asterisk) <* spaces' <* endOfLine
+  where hyphen :: Parser Block
+        hyphen = do
+          chars <- many1 $ char '-'
+          guard (length chars >= 3)
+          return Divider
+        
+        asterisk :: Parser Block
+        asterisk = do
+          chars <- many1 $ char '*'
+          guard (length chars >= 3)
+          return Divider
 
 parseCode :: Parser Block
 parseCode = do
-  string "```"
-  newline'
-  code <- manyTill anyChar (string "```")
-  newline'
-  return $ Code code
+  codeSymbol
+  language <- between' spaces' (spaces' <* endOfLine) anyChar
+  code <- manyTill anyChar codeSymbol
+  spaces'
+  endOfLine
+  return $ Code (if null language then Nothing else Just language) code
+  where codeSymbol :: Parser String
+        codeSymbol = count 3 (char '`')
 
 parseParagraph :: Parser Block
-parseParagraph = do
-  inlines <- parseInlines
-  newline'
-  return $ Paragraph inlines
+parseParagraph = parseInlines >>= return . Paragraph
 
 parseInlines :: Parser [Inline]
-parseInlines = manyTill parseInline (lookAhead newline')
+parseInlines = manyTill parseInline endOfLine
 
 parseInline :: Parser Inline
 parseInline = choice [ try parseLink
                      , try parseImage
-                     , try parseItalicStrong
                      , try parseStrong
                      , try parseItalic
-                     , try parseString ]
+                     , parseString ]
 
 parseLink :: Parser Inline
 parseLink = do
-  char '['
-  name <- manyTill anyChar (char ']')
-  char '('
-  address <- manyTill anyChar (char ')')
+  name <- between' (char '[') (char ']') anyChar
+  address <- between' (char '(') (char ')') anyChar
   return $ Link name address
 
 parseImage :: Parser Inline
 parseImage = do
-  char '!'
-  char '['
-  alt <- manyTill anyChar (char ']')
-  char '('
-  address <- manyTill anyChar (char ')')
+  alt <- between' (string "![") (char ']') anyChar
+  address <- between' (char '(') (char ')') anyChar
   return $ Image alt address
 
 parseItalic :: Parser Inline
-parseItalic = do
-  char '*'
-  str <- manyTill anyChar (char '*')
-  return $ Italic str
+parseItalic = between' asterisk asterisk parseInline >>= return . Italic
+  where asterisk = count 1 $ char '*'
 
 parseStrong :: Parser Inline
-parseStrong = do
-  string "**"
-  str <- manyTill anyChar (string "**")
-  return $ Strong str
-
-parseItalicStrong :: Parser Inline
-parseItalicStrong = do
-  string "***"
-  str <- manyTill anyChar (string "***")
-  return $ ItalicStrong str
+parseStrong = between' asterisk asterisk parseInline >>= return . Strong
+  where asterisk = count 2 $ char '*'
 
 parseString :: Parser Inline
 parseString = do
-  str <- manyTill anyChar (lookAhead $ newline' <|> (nextInlineOrEnd >> return ()))
-  return $ Text str
-  where nextInlineOrEnd :: Parser Inline
-        nextInlineOrEnd = choice [ try parseLink
-                                 , try parseImage
-                                 , try parseItalicStrong
-                                 , try parseStrong
-                                 , try parseItalic ]
+  c <- anyChar
+  cs <- manyTill anyChar (lookAhead $ oneOf "![*" <|> endOfLine)
+  return $ Text (c:cs)
 
-newline' = eof <|> (newline >> return ())
+between' :: Parser a -> Parser b -> Parser c -> Parser [c]
+between' a b c = a *> manyTill c (try b)
+
+spaces' :: Parser ()
+spaces' = skipMany (char ' ')
+
+spaces'' :: Parser ()
+spaces'' = skipMany1 (char ' ')
