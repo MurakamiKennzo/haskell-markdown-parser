@@ -3,6 +3,10 @@
 ![license](https://img.shields.io/github/license/MurakamiKennzo/haskell-markdown-parser)
 ![build](https://img.shields.io/badge/build-0.1.0.0--test-green)
 
+## stats
+
+![github-readme-stats](https://github-readme-stats.anuraghazra1.vercel.app/api/pin/?username=MurakamiKennzo&repo=haskell-markdown-parser&theme=radical)
+
 ## shell
 
 Here is a shell build on Mac OSX, you can use like this:
